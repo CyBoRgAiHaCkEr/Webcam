@@ -1,31 +1,28 @@
 import streamlit as st
 from streamlit_webrtc import webrtc_streamer, RTCConfiguration
-import logging
 
-# Set up logging so we can see what's happening in the background
-logging.basicConfig(level=logging.DEBUG)
+st.title("Final Fix: Relay Mode 🚀")
 
-st.title("Emergency WebRTC Link")
-
-# Simplified config - removing unnecessary parameters that cause hangs
+# We are adding a TURN server here. 
+# This acts as a 'tunnel' through your firewall.
 RTC_CONFIGURATION = RTCConfiguration(
-    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+    {
+        "iceServers": [
+            {"urls": ["stun:stun.l.google.com:19302"]},
+            {
+                "urls": ["turn:openrelay.metered.ca:443"],
+                "username": "openrelayproject",
+                "password": "openrelayproject",
+            },
+        ]
+    }
 )
 
-ctx = webrtc_streamer(
-    key="emergency-link",
+webrtc_streamer(
+    key="relay-stream",
     rtc_configuration=RTC_CONFIGURATION,
-    # This 'video_html_attrs' fix helps mobile browsers load the feed
-    video_html_attrs={
-        "style": {"width": "100%"},
-        "controls": False,
-        "autoPlay": True,
-        "playsInline": True,
-        "muted": True,
-    },
+    media_stream_constraints={"video": True, "audio": False}, # Audio off to reduce lag
+    async_processing=True,
 )
 
-if ctx.state.playing:
-    st.success("Stream is active!")
-else:
-    st.info("Press 'Start' to begin the connection.")
+st.warning("If the screen is still black, please try opening this URL on your phone's mobile data (not Wi-Fi).")
