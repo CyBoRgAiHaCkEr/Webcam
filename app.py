@@ -1,19 +1,31 @@
 import streamlit as st
 from streamlit_webrtc import webrtc_streamer, RTCConfiguration
+import logging
 
-st.set_page_config(page_title="Webcam Mirror", layout="wide")
+# Set up logging so we can see what's happening in the background
+logging.basicConfig(level=logging.DEBUG)
 
-st.title("Streamlit Live Link 🎥")
-st.write("Connect your webcam and audio below. Share the URL to view from another device.")
+st.title("Emergency WebRTC Link")
 
-# Google's public STUN servers allow the connection to bypass firewalls
+# Simplified config - removing unnecessary parameters that cause hangs
 RTC_CONFIGURATION = RTCConfiguration(
     {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
 )
 
-webrtc_streamer(
-    key="live-stream",
+ctx = webrtc_streamer(
+    key="emergency-link",
     rtc_configuration=RTC_CONFIGURATION,
-    media_stream_constraints={"video": True, "audio": True},
-    async_processing=True,
+    # This 'video_html_attrs' fix helps mobile browsers load the feed
+    video_html_attrs={
+        "style": {"width": "100%"},
+        "controls": False,
+        "autoPlay": True,
+        "playsInline": True,
+        "muted": True,
+    },
 )
+
+if ctx.state.playing:
+    st.success("Stream is active!")
+else:
+    st.info("Press 'Start' to begin the connection.")
